@@ -1,0 +1,1 @@
+kubeadm join 10.128.0.42:6443 --token vb3mcd.ffsiv7unzjgs79lt     --discovery-token-ca-cert-hash sha256:f19752d003d7115fe3acf94939a9f39aa2f71bfbc0a6cb4a691852ec1594c33f 

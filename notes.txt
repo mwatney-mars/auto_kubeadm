@@ -1,0 +1,114 @@
+
+
+
+Execute the following command on all machines:
+
+### Installing Docker from oficial repository 
+sudo apt-get update
+sudo apt-get -y install apt-transport-https ca-certificates curl gnupg2 software-properties-common
+curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg | sudo apt-key add -
+sudo apt-key fingerprint 0EBFCD88
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")    $(lsb_release -cs) stable"
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+sudo groupadd docker
+sudo usermod -aG docker $USER
+
+### Install kubeadm, kubectl and kubelet from oficial repository ###
+sudo apt-get update && sudo apt-get install -y apt-transport-https curl
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo su -c "cat > /etc/apt/sources.list.d/kubernetes.list <<EOF
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF"
+
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
+
+Execute the following command only on your master node 
+
+### Initialize your cluster ###
+sudo kubeadm init --pod-network-cidr=192.168.0.0/16
+
+### When the init finishes, kubeadm will give you the command to add your workers to your cluster. Save this command for later use.
+
+    EXAMPLE:
+
+    kubeadm join 10.128.0.17:6443 --token 27evky.hoel95h16poqici6 \
+      --discovery-token-ca-cert-hash sha256:521f69cb935951bbfee142432108caeaeaf1682d8647208ba2f558624890ab63 
+
+
+### After the kubeadm init command completes, run the following commands to start using your new cluster
+
+mkdir -p $HOME/.kube 
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config 
+sudo chown $(id -u):$(id -g) $HOME/.kube/config 
+
+### Your master is not ready yet, we need to create a cni network (You can choose different CNIs.)
+kubectl apply -f https://docs.projectcalico.org/v3.11/manifests/calico.yaml
+
+### GCE blocks traffic between hosts by default; run the following command to allow Calico traffic to flow between containers on different hosts.   ###
+
+gcloud compute firewall-rules create calico-ipip --allow 4 --network "default" --source-ranges "10.128.0.0/9"
+
+### Check if your master node is ready. It needs a while to start all dependencies 
+kubectl get nodes
+
+    EXAMPLE: 
+        user@kubemaster:~$ kubectl get nodes
+        NAME         STATUS     ROLES    AGE   VERSION
+        kubemaster   NotReady   master   32s   v1.16.2
+
+    To check more details about your node:
+
+    kubectl describe node <NODENAME>
+
+### When your master node is ready you can proceed and run the kubectl join command (saved previously) on your worker nodes:
+
+    sudo kubeadm join 10.128.0.17:6443 --token 27evky.hoel95h16poqici6 --discovery-token-ca-cert-hash sha256:521f69cb935951bbfee142432108caeaeaf1682d8647208ba2f558624890ab63
+
+### Check if your worker node is ready (command must be executed on master node)
+
+kubectl get nodes
+
+### If you want to have more workers, just repeat the `kubectl join` command on the new workres. 
+
+### Enabling Auto-Completion for kubectl 
+
+sudo apt-get install bash-completion; source <(kubectl completion bash); echo "source <(kubectl completion bash)" >> ~/.bashrc; alias k=kubectl; complete -F __start_kubectl k
+
+### If you are runnuing a single node cluster it's necessary to allow pods to be scheduled on the control-plane node.
+
+kubectl taint nodes --all node-role.kubernetes.io/master-
+
+### To remove a node from cluster
+
+    ## On master node
+    kubectl drain kubenode02 --delete-local-data --force --ignore-daemonsets
+    kubectl delete node kubenode02
+
+    ## On removed node (kubenode02)
+
+    sudo kubeadm reset -f
+    sudo systemctl stop kubelet
+    sudo systemctl stop docker
+    sudo rm -rf /var/lib/cni/
+    sudo rm -rf /var/lib/kubelet/*
+    sudo m -rf /var/lib/etcd/*
+    sudo rm -rf /etc/cni/
+    sudo ifconfig cni0 down
+    sudo ifconfig flannel.1 down
+    sudo ifconfig docker0 down
+    sudo ip link delete cni0
+    sudo ip link delete flannel.1
+    sudo systemctl start docker
+    sudo iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+    sudo ipvsadm -C
+
+
+### CleanUp
+for i in 0 1 2; do
+  gcloud compute instances delete kubeadm-${i} -q
+done    
+
+
