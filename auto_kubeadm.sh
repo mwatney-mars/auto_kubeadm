@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #KUBERNETES_VERSION ## If you want to use a different version of kubernetes, change it on install_prereqs.sh 
-INSTANCE_NAME_PREFIX="kubeadm-script2"
+INSTANCE_NAME_PREFIX="kubeadm-script"
 INSTANCE_IMAGE="debian-9-drawfork-v20200207"
 INSTANCE_MACHINE_TYPE="n1-standard-2"
 GCLOUD_ZONE="us-central1-a"
@@ -100,6 +100,7 @@ gcloud compute firewall-rules create calico-ipip --allow 4 --network "default" -
 MASTER_STATUS=$(gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE" -- "kubectl get nodes" | grep master | awk '{ print $2 }')
 while [ "$MASTER_STATUS" != "Ready" ]
 do
+  MASTER_STATUS=$(gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE" -- "kubectl get nodes" | grep master | awk '{ print $2 }')
   echo "Waiting cluster to get Ready (Status: $MASTER_STATUS)"
 
   sleep 2
@@ -127,11 +128,11 @@ else
 fi
 rm ./joincmd
 
-sleep 5
+sleep 10
 gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE" -- "kubectl get nodes"
 
 echo "Your cluster is Ready, now you can log into your Master Node and start using it:".
 echo " "
-echo "gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE""
+echo "$ gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE""
 echo " "
 echo "Have fun!"
