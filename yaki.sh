@@ -1,18 +1,18 @@
 #!/bin/bash
 
 #KUBERNETES_VERSION ## If you want to use a different version of kubernetes, change it on install_prereqs.sh 
-INSTANCE_NAME_PREFIX="kubeadm-crazy"
+INSTANCE_NAME_PREFIX="kubeadm-test"
 INSTANCE_IMAGE="debian-9-drawfork-v20200207"
 INSTANCE_MACHINE_TYPE="n1-standard-2"
 GCLOUD_ZONE="us-central1-a"
-QTD_NODES="10"
+QTD_NODES="1"
 STARTUP_SCRIPT="install_prereqs.sh"
 CALICO_MANIFEST="https://docs.projectcalico.org/v3.11/manifests/calico.yaml"
 DELETE_OLD_CLUSTER="yes"
 LOGFILE="./log/auto_kubeadm.log"
 
 
-mkdir ./log > $LOGFILE 2>&1
+mkdir ./log > /dev/null 2>&1
 clear
 
 echo "Your cluster will be created using the following variables:"
@@ -85,33 +85,44 @@ do
   i=$((i + 1))
 done
 
-sleep 10
+sleep 15
 
 echo " "
 echo "Checking if Master node is Ready (Be patient, we are injecting the startup_script)"
 echo " "
 i=1
 READINESS=false
-while [ $i -le $QTD_NODES ]
-do
-  while [ $READINESS != true ]
-  do
-    IP=$(gcloud compute instances list | awk '/'$INSTANCE_NAME_PREFIX-${i}'/ {print $5}')
-    if nc -w 1 -z "$IP" 22; then
-      echo " "
-      echo "OK! Master Node ($INSTANCE_NAME_PREFIX-${i}) is Ready"
-      echo " "
+while [ $READINESS != true ]; do
+  VAR=$(gcloud compute ssh $INSTANCE_NAME_PREFIX-1 --zone $GCLOUD_ZONE --command "grep PREREQSDONE /var/log/daemon.log" 2> /dev/null)
+  if [ -n "$VAR" ]; then 
+    echo " "
+    echo "OK! Master Node ($INSTANCE_NAME_PREFIX-1) is Ready"
+    echo " "
 
-      ### Adding user to docker group 
-      gcloud compute ssh $INSTANCE_NAME_PREFIX-${i} --zone $GCLOUD_ZONE --command "sudo groupadd docker; sudo usermod -aG docker $USER" > $LOGFILE 2>&1
+    ### Adding user to docker group 
+    gcloud compute ssh $INSTANCE_NAME_PREFIX-1 --zone $GCLOUD_ZONE --command "sudo groupadd docker; sudo usermod -aG docker $USER"
 
-      READINESS=true
-    else
-      echo "$INSTANCE_NAME_PREFIX-${i} Not Ready..."
-      sleep 15
-    fi
-  done
-  i=$((i + 1))
+    READINESS=true
+  else 
+    echo "$INSTANCE_NAME_PREFIX-1 Not Ready..."
+    sleep 15
+  fi
+
+  # IP=$(gcloud compute instances list | awk '/'$INSTANCE_NAME_PREFIX-${i}'/ {print $5}')
+  
+  # if nc -w 1 -z "$IP" 22; then
+  #   echo " "
+  #   echo "OK! Master Node ($INSTANCE_NAME_PREFIX-${i}) is Ready"
+  #   echo " "
+
+  #   ### Adding user to docker group 
+  #   gcloud compute ssh $INSTANCE_NAME_PREFIX-${i} --zone $GCLOUD_ZONE --command "sudo groupadd docker; sudo usermod -aG docker $USER" > $LOGFILE 2>&1
+
+  #   READINESS=true
+  # else
+  #   echo "$INSTANCE_NAME_PREFIX-${i} Not Ready..."
+  #   sleep 15
+  # fi
 done
 
 ### Initialize cluster on node 0
@@ -154,21 +165,21 @@ if [ "$QTD_NODES" -gt 1 ]; then
 
     x=$((x + 1))
   done
+  x=$((x - 1))
+  while [ "$LASTNODE_STATUS" != "Ready" ]
+  do
+    LASTNODE_STATUS=$(gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE" --command "kubectl get nodes" | grep $INSTANCE_NAME_PREFIX-$x | awk '{ print $2 }')
+    echo "Waiting last node to get Ready (Status: $LASTNODE_STATUS)"
+
+    sleep 5
+  done
 else
   echo "Allowing pods to be scheduled on the control-plane node"
   echo " "
   gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE" --command "kubectl taint nodes --all node-role.kubernetes.io/master-"
 fi
-rm ./joincmd
+rm ./joincmd > $LOGFILE 2>&1
 
-x=$((x - 1))
-while [ "$LASTNODE_STATUS" != "Ready" ]
-do
-  LASTNODE_STATUS=$(gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE" --command "kubectl get nodes" | grep $INSTANCE_NAME_PREFIX-$x | awk '{ print $2 }')
-  echo "Waiting last node to get Ready (Status: $LASTNODE_STATUS)"
-
-  sleep 5
-done
 echo " "
 gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE" --command "kubectl get nodes"
 echo " "

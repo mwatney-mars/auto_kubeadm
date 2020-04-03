@@ -2,8 +2,6 @@
 
 KUBERNETES_VERSION="1.17.4-00"
 
-systemctl stop ssh
-
 apt-get update
 
 apt-get install -y\
@@ -49,4 +47,4 @@ apt-mark hold \
 apt-get install \
     bash-completion
 
-systemctl start ssh    
+echo "PREREQSDONE"
