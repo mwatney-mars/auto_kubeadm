@@ -53,8 +53,7 @@ if [ "$DELETE_OLD_CLUSTER" == "yes" ]; then
   fi
 else
   i=1
-  while [ $i -lt "$QTD_NODES" ]
-  do
+  while [ $i -lt "$QTD_NODES" ]; do
     INSTANCE_CHECK=$(gcloud compute instances list | awk '{ print $1 }' | grep "$INSTANCE_NAME_PREFIX-${i}")
     if [ "$INSTANCE_CHECK" == "$INSTANCE_NAME_PREFIX-${i}" ]; then
       echo "ERROR: Oh I can't proceed. have compute instances using the same prefix defined on INSTANCE_NAME_PREFIX ($INSTANCE_NAME_PREFIX). 
@@ -68,8 +67,7 @@ fi
 echo "Creating new compute instances"
 echo " "
 i=1
-while [ $i -le "$QTD_NODES" ]
-do
+while [ $i -le "$QTD_NODES" ]; do
   gcloud compute instances create $INSTANCE_NAME_PREFIX-${i} \
     --async \
     --boot-disk-size 100GB \
@@ -100,29 +98,13 @@ while [ $READINESS != true ]; do
     echo " "
 
     ### Adding user to docker group 
-    gcloud compute ssh $INSTANCE_NAME_PREFIX-1 --zone $GCLOUD_ZONE --command "sudo groupadd docker; sudo usermod -aG docker $USER"
+    gcloud compute ssh $INSTANCE_NAME_PREFIX-1 --zone $GCLOUD_ZONE --command "sudo groupadd docker; sudo usermod -aG docker $USER" > $LOGFILE 2>&1
 
     READINESS=true
   else 
     echo "$INSTANCE_NAME_PREFIX-1 Not Ready..."
     sleep 15
   fi
-
-  # IP=$(gcloud compute instances list | awk '/'$INSTANCE_NAME_PREFIX-${i}'/ {print $5}')
-  
-  # if nc -w 1 -z "$IP" 22; then
-  #   echo " "
-  #   echo "OK! Master Node ($INSTANCE_NAME_PREFIX-${i}) is Ready"
-  #   echo " "
-
-  #   ### Adding user to docker group 
-  #   gcloud compute ssh $INSTANCE_NAME_PREFIX-${i} --zone $GCLOUD_ZONE --command "sudo groupadd docker; sudo usermod -aG docker $USER" > $LOGFILE 2>&1
-
-  #   READINESS=true
-  # else
-  #   echo "$INSTANCE_NAME_PREFIX-${i} Not Ready..."
-  #   sleep 15
-  # fi
 done
 
 ### Initialize cluster on node 0
@@ -143,8 +125,7 @@ gcloud compute ssh $INSTANCE_NAME_PREFIX-1 --zone $GCLOUD_ZONE --command "kubect
 gcloud compute firewall-rules create calico-ipip --allow 4 --network "default" --source-ranges "10.128.0.0/9" > $LOGFILE 2>&1
 
 MASTER_STATUS=$(gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE" --command "kubectl get nodes" | grep master | awk '{ print $2 }')
-while [ "$MASTER_STATUS" != "Ready" ]
-do
+while [ "$MASTER_STATUS" != "Ready" ]; do
   MASTER_STATUS=$(gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE" --command "kubectl get nodes" | grep master | awk '{ print $2 }')
   echo "Waiting cluster to get Ready (Status: "$MASTER_STATUS")"
 
@@ -155,8 +136,7 @@ echo " "
 if [ "$QTD_NODES" -gt 1 ]; then
   gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE" --command "kubeadm token create --print-join-command > joincmd" > $LOGFILE 2>&1
   x=2
-  while [ "$x" -le "$QTD_NODES" ]
-  do
+  while [ "$x" -le "$QTD_NODES" ]; do
     gcloud compute scp "$INSTANCE_NAME_PREFIX-1:~/joincmd" --zone "$GCLOUD_ZONE" . > $LOGFILE 2>&1 
     gcloud compute scp ./joincmd "$INSTANCE_NAME_PREFIX-$x:~/joincmd" --zone "$GCLOUD_ZONE"  > $LOGFILE 2>&1
     echo "Joining Slave Node: $INSTANCE_NAME_PREFIX-$x"
@@ -166,9 +146,9 @@ if [ "$QTD_NODES" -gt 1 ]; then
     x=$((x + 1))
   done
   x=$((x - 1))
-  while [ "$LASTNODE_STATUS" != "Ready" ]
-  do
+  while [ "$LASTNODE_STATUS" != "Ready" ]; do
     LASTNODE_STATUS=$(gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE" --command "kubectl get nodes" | grep $INSTANCE_NAME_PREFIX-$x | awk '{ print $2 }')
+    echo " "
     echo "Waiting last node to get Ready (Status: $LASTNODE_STATUS)"
 
     sleep 5
