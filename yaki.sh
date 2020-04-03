@@ -16,9 +16,11 @@ echo " "
 eval `ssh-agent -s` > /dev/null 2>&1
 ssh-add ~/.ssh/google_compute_engine
 
-if [ $? -eq 0 ]
-then
+if [ $? -eq 0 ]; then
+  echo ""
 else
+  echo " "
+  echo "Ops, failed to add your ssh-key to the authentication agent. Check your passphrase."
   exit 1
 fi
 
