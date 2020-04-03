@@ -16,6 +16,12 @@ echo " "
 eval `ssh-agent -s` > /dev/null 2>&1
 ssh-add ~/.ssh/google_compute_engine
 
+if [ $? -eq 0 ]
+then
+else
+  exit 1
+fi
+
 mkdir ./log > /dev/null 2>&1
 clear
 
