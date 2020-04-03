@@ -164,10 +164,6 @@ else
 fi
 rm ./joincmd > $LOGFILE 2>&1
 
-echo "Removing your key from authentication agent"
-echo " "
-ssh-add -d ~/.ssh/google_compute_engine
-echo " "
 gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE" --command "kubectl get nodes"
 echo " "
 echo "Your cluster is Ready, now you can log into your Master Node and start using it:"
@@ -176,3 +172,8 @@ echo "$ gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE""
 echo " "
 echo "Have fun!"
 echo " "
+echo "Removing your key from authentication agent"
+echo " "
+ssh-add -d ~/.ssh/google_compute_engine
+echo " "
+
