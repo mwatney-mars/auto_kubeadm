@@ -10,7 +10,10 @@ STARTUP_SCRIPT="install_prereqs.sh"
 CALICO_MANIFEST="https://docs.projectcalico.org/v3.11/manifests/calico.yaml"
 DELETE_OLD_CLUSTER="yes"
 LOGFILE="./log/auto_kubeadm.log"
-
+echo "Adding your ssh-key to the authentication agent"
+echo " "
+eval `ssh-agent -s` > /dev/null 2>&1
+ssh-add ~/.ssh/google_compute_engine
 
 mkdir ./log > /dev/null 2>&1
 clear
@@ -160,6 +163,9 @@ else
 fi
 rm ./joincmd > $LOGFILE 2>&1
 
+echo "Removing your key from authentication agent"
+echo " "
+ssh-add -d ~/.ssh/google_compute_engine
 echo " "
 gcloud compute ssh "$INSTANCE_NAME_PREFIX-1" --zone "$GCLOUD_ZONE" --command "kubectl get nodes"
 echo " "
