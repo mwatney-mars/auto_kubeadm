@@ -27,14 +27,20 @@ function quit {
   exit
 }
 
+function pause(){
+   read -p "$*"
+}
+
 function add_ssh_key {
   echo "Adding your ssh-key to the authentication agent"
-  echo " "
+  pause 'Press [Enter] key to continue...'
   eval `ssh-agent -s` > /dev/null 2>&1
 
   FILE=/etc/resolv.conf
   if [ -f ~/.ssh/google_compute_engine ]; then
-      ssh-add ~/.ssh/google_compute_engine
+    echo "Your GCP SSH key don't exist. Let's create it!"
+    
+    ssh-add ~/.ssh/google_compute_engine
   else  
     gcloud compute config-ssh  
     ssh-add ~/.ssh/google_compute_engine
