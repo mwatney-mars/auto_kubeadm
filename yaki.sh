@@ -18,7 +18,7 @@ function define_instances_name {
 }
 
 function prep_startup_script {
-  SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd/ )"
+  SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )/"
   STARTUP_SCRIPT_PATH="$SCRIPT_PATH""$STARTUP_SCRIPT_PATH"
   sed "2 aKUBERNETES_VERSION=\"$KUBERNETES_VERSION\"" "$STARTUP_SCRIPT_PATH"base > "$STARTUP_SCRIPT_PATH""$STARTUP_SCRIPT"
 }
