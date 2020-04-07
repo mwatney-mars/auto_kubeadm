@@ -29,7 +29,14 @@ function add_ssh_key {
   echo "Adding your ssh-key to the authentication agent"
   echo " "
   eval `ssh-agent -s` > /dev/null 2>&1
-  ssh-add ~/.ssh/google_compute_engine
+
+  FILE=/etc/resolv.conf
+  if [ -f ~/.ssh/google_compute_engine ]; then
+      ssh-add ~/.ssh/google_compute_engine
+  else  
+    gcloud compute config-ssh  
+    ssh-add ~/.ssh/google_compute_engine
+  fi
 
   if [ $? -eq 0 ]; then
     echo ""
