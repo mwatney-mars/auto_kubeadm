@@ -227,7 +227,21 @@ function create_instances ()
       --machine-type $INSTANCE_MACHINE_TYPE \
       --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
       --zone $GCLOUD_ZONE \
-      --metadata-from-file startup-script=$STARTUP_SCRIPT_PATH""$STARTUP_SCRIPT  > $LOGFILE 2>&1 &
+      --metadata-from-file startup-script=$STARTUP_SCRIPT_PATH""$STARTUP_SCRIPT  > $LOGFILE 2>&1
+    
+    if [ $? -eq 0 ]; then
+      echo ""
+    else
+      echo
+      read -p  "An error ocurred while creating your instances, do you want to check execution logs? (y/N)? " choice
+
+      case "$choice" in 
+        y|Y ) echo;cat $LOGFILE;;
+        n|N ) quit;;
+        * ) quit;;
+      esac
+    fi      
+
     echo "$INSTANCE_NAME-${i} created"
     i=$((i + 1))
   done
@@ -384,18 +398,7 @@ main ()
   check_if_delete_cluster
   create_instances
 
-  if [ $? -eq 0 ]; then
-    echo ""
-  else
-    echo
-    read -p  "An error ocurred while creating your instances, do you want to check execution logs? (y/N)? " choice
 
-    case "$choice" in 
-      y|Y ) echo;cat $LOGFILE;;
-      n|N ) quit;;
-      * ) quit;;
-    esac
-  fi  
 
   sleep 15
   check_master_readiness
