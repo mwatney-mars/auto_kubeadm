@@ -230,9 +230,8 @@ function create_instances ()
       --metadata-from-file startup-script=$STARTUP_SCRIPT_PATH""$STARTUP_SCRIPT  > $LOGFILE 2>&1
 
     if [ $? -eq 0 ]; then
-      echo $?
+      echo ""
     else
-      echo
       read -p  "An error ocurred while creating your instances, do you want to check execution logs? (y/N)? " choice
 
       case "$choice" in 
@@ -360,7 +359,8 @@ function print_cluster_specs ()
 {
   echo "Your cluster will be created using the following variables:"
   echo
-  echo "KUBERNETES_VERSION=$KUBERNETES_VERSION
+  echo "
+  KUBERNETES_VERSION=$KUBERNETES_VERSION
   INSTANCE_NAME=$INSTANCE_NAME
   INSTANCE_IMAGE=$INSTANCE_IMAGE
   INSTANCE_MACHINE_TYPE=$INSTANCE_MACHINE_TYPE
@@ -398,9 +398,6 @@ main ()
 
   check_if_delete_cluster
   create_instances
-
-
-
   sleep 15
   check_master_readiness
   init_master
