@@ -229,10 +229,8 @@ function create_instances ()
       --zone $GCLOUD_ZONE \
       --metadata-from-file startup-script=$STARTUP_SCRIPT_PATH""$STARTUP_SCRIPT  #> $LOGFILE 2>&1
 
-    echo $?
-    
     if [ $? -eq 0 ]; then
-      echo ""
+      echo $?
     else
       echo
       read -p  "An error ocurred while creating your instances, do you want to check execution logs? (y/N)? " choice
