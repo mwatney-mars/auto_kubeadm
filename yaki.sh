@@ -227,7 +227,7 @@ function create_instances ()
       --machine-type $INSTANCE_MACHINE_TYPE \
       --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
       --zone $GCLOUD_ZONE \
-      --metadata-from-file startup-script=$STARTUP_SCRIPT_PATH""$STARTUP_SCRIPT  > $LOGFILE 2>&1
+      --metadata-from-file startup-script=$STARTUP_SCRIPT_PATH""$STARTUP_SCRIPT >> $LOGFILE 2>&1
 
     if [ $? -eq 0 ]; then
       echo ""
@@ -262,7 +262,7 @@ function check_master_readiness ()
       echo
 
       ### Adding user to docker group 
-      gcloud compute ssh $INSTANCE_NAME-1 --zone $GCLOUD_ZONE --command "sudo groupadd docker; sudo usermod -aG docker $USER" > $LOGFILE 2>&1
+      gcloud compute ssh $INSTANCE_NAME-1 --zone $GCLOUD_ZONE --command "sudo groupadd docker; sudo usermod -aG docker $USER" >> $LOGFILE 2>&1
 
       READINESS=true
     else 
@@ -277,7 +277,7 @@ function init_master ()
   ### Initialize cluster on node 0
   echo "Initializing Master Node"
   echo
-  gcloud compute ssh $INSTANCE_NAME-1 --zone $GCLOUD_ZONE --command "sudo kubeadm init --pod-network-cidr=192.168.0.0/16" > $LOGFILE 2>&1
+  gcloud compute ssh $INSTANCE_NAME-1 --zone $GCLOUD_ZONE --command "sudo kubeadm init --pod-network-cidr=192.168.0.0/16" >> $LOGFILE 2>&1
 
   gcloud compute ssh $INSTANCE_NAME-1 --zone $GCLOUD_ZONE --command "mkdir -p $HOME/.kube; sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config; sudo chown $(id -u):$(id -g) $HOME/.kube/config; sudo chown $USER:$USER -R .kube/" 
 }
@@ -292,10 +292,10 @@ function apply_calico ()
 {
   echo "Applying Callico CNI"
   echo
-  gcloud compute ssh $INSTANCE_NAME-1 --zone $GCLOUD_ZONE --command "kubectl apply -f $CALICO_MANIFEST" > $LOGFILE 2>&1
+  gcloud compute ssh $INSTANCE_NAME-1 --zone $GCLOUD_ZONE --command "kubectl apply -f $CALICO_MANIFEST" >> $LOGFILE 2>&1
 
   ### Enable ipip communication for calico ### GCE blocks traffic between hosts by default; the following command allow Calico traffic to flow between containers on different hosts. 
-  gcloud compute firewall-rules create calico-ipip --allow 4 --network "default" --source-ranges "10.128.0.0/9" > $LOGFILE 2>&1
+  gcloud compute firewall-rules create calico-ipip --allow 4 --network "default" --source-ranges "10.128.0.0/9" >> $LOGFILE 2>&1
 }
 
 function check_master_status ()
@@ -313,14 +313,14 @@ function check_master_status ()
 function join_workers ()
 {
   if [ "$QTD_NODES" -gt 1 ]; then
-    gcloud compute ssh "$INSTANCE_NAME-1" --zone "$GCLOUD_ZONE" --command "kubeadm token create --print-join-command > joincmd" > $LOGFILE 2>&1
+    gcloud compute ssh "$INSTANCE_NAME-1" --zone "$GCLOUD_ZONE" --command "kubeadm token create --print-join-command > joincmd" >> $LOGFILE 2>&1
     x=2
     while [ "$x" -le "$QTD_NODES" ]; do
-      gcloud compute scp "$INSTANCE_NAME-1:~/joincmd" --zone "$GCLOUD_ZONE" . > $LOGFILE 2>&1 
-      gcloud compute scp ./joincmd "$INSTANCE_NAME-$x:~/joincmd" --zone "$GCLOUD_ZONE"  > $LOGFILE 2>&1
+      gcloud compute scp "$INSTANCE_NAME-1:~/joincmd" --zone "$GCLOUD_ZONE" . >> $LOGFILE 2>&1 
+      gcloud compute scp ./joincmd "$INSTANCE_NAME-$x:~/joincmd" --zone "$GCLOUD_ZONE"  >> $LOGFILE 2>&1
       echo "Joining Slave Node: $INSTANCE_NAME-$x"
-      gcloud compute ssh "$INSTANCE_NAME-$x" --zone "$GCLOUD_ZONE" --command "sudo sh ./joincmd" > $LOGFILE 2>&1
-      gcloud compute ssh "$INSTANCE_NAME-$x" --zone "$GCLOUD_ZONE" --command "rm ./joincmd" > $LOGFILE 2>&1
+      gcloud compute ssh "$INSTANCE_NAME-$x" --zone "$GCLOUD_ZONE" --command "sudo sh ./joincmd" >> $LOGFILE 2>&1
+      gcloud compute ssh "$INSTANCE_NAME-$x" --zone "$GCLOUD_ZONE" --command "rm ./joincmd" >> $LOGFILE 2>&1
 
       x=$((x + 1))
     done
@@ -337,7 +337,7 @@ function join_workers ()
     echo
     gcloud compute ssh "$INSTANCE_NAME-1" --zone "$GCLOUD_ZONE" --command "kubectl taint nodes --all node-role.kubernetes.io/master-"
   fi
-  rm ./joincmd > $LOGFILE 2>&1
+  rm ./joincmd >> $LOGFILE 2>&1
 }
 
 function print_end ()
