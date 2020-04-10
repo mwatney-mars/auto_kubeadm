@@ -227,7 +227,9 @@ function create_instances ()
       --machine-type $INSTANCE_MACHINE_TYPE \
       --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
       --zone $GCLOUD_ZONE \
-      --metadata-from-file startup-script=$STARTUP_SCRIPT_PATH""$STARTUP_SCRIPT  > $LOGFILE 2>&1
+      --metadata-from-file startup-script=$STARTUP_SCRIPT_PATH""$STARTUP_SCRIPT  #> $LOGFILE 2>&1
+
+    echo $?
     
     if [ $? -eq 0 ]; then
       echo ""
