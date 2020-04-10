@@ -153,7 +153,7 @@ function add_ssh_key ()
 
 function setup_logs ()
 {
-  mkdir ./log > /dev/null 2>&1
+  mkdir ${LOGFILE%/*}/ > /dev/null 2>&1
 }
 
 function check_if_delete_cluster ()
@@ -369,11 +369,11 @@ main ()
 
   print_cluster_specs
   echo
-  read -p "You want to continue using pre-defined specs? (y/n)? " choice
+  read -p "You want to change any pre-defined specs? (y/N)? " choice
   case "$choice" in 
     y|Y ) echo;prompt_cluster_specs;print_cluster_specs;;
     n|N ) echo;echo "Using Defaults...";echo;;
-    * ) echo "invalid";;
+    * ) echo;echo "Using Defaults...";echo;;
   esac
 
   echo "To watch what is hapening on the background execute this command (yes, I know... it's messy):"
