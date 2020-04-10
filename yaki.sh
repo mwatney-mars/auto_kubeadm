@@ -217,6 +217,7 @@ function create_instances ()
   echo
   i=1
   while [ $i -le "$QTD_NODES" ]; do
+    echo $?
     gcloud compute instances create $INSTANCE_NAME-${i} \
       --async \
       --boot-disk-size 100GB \
