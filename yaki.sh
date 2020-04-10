@@ -383,6 +383,20 @@ main ()
 
   check_if_delete_cluster
   create_instances
+
+  if [ $? -eq 0 ]; then
+    echo ""
+  else
+    echo
+    read -p  "An error ocurred while creating your instances, do you want to check execution logs? (y/N)? " choice
+
+    case "$choice" in 
+      y|Y ) echo;cat $LOGFILE;;
+      n|N ) quit;;
+      * ) quit;;
+    esac
+  fi  
+
   sleep 15
   check_master_readiness
   init_master
