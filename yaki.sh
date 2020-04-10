@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Define script path 
+SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )/"
+
 # Preset Values ## User will prompted to confirm / change
 KUBERNETES_VERSION="1.17.4-00"
 INSTANCE_NAME_SUFIX="test"
@@ -14,7 +17,7 @@ STARTUP_SCRIPT_PATH="startup-script/"
 STARTUP_SCRIPT="install_prereqs.sh"
 CALICO_MANIFEST="https://docs.projectcalico.org/v3.11/manifests/calico.yaml"
 DELETE_OLD_CLUSTER="yes"
-LOGFILE="./log/auto_kubeadm.log"
+LOGFILE="$SCRIPT_PATH""log/auto_kubeadm.log"
 
 unknown_os ()
 {
@@ -109,7 +112,6 @@ function check_cmd_arguments ()
 
 function prep_startup_script ()
 {
-  SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )/"
   STARTUP_SCRIPT_PATH="$SCRIPT_PATH""$STARTUP_SCRIPT_PATH"
   sed "2 aKUBERNETES_VERSION=\"$KUBERNETES_VERSION\"" "$STARTUP_SCRIPT_PATH"base > "$STARTUP_SCRIPT_PATH""$STARTUP_SCRIPT"
 }
