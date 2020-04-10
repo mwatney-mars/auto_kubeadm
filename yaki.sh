@@ -217,17 +217,19 @@ function create_instances ()
   echo
   i=1
   while [ $i -le "$QTD_NODES" ]; do
-    gcloud compute instances create $INSTANCE_NAME-${i} \
-      --async \
-      --boot-disk-size 100GB \
-      --boot-disk-type=pd-ssd \
-      --can-ip-forward \
-      --image=$INSTANCE_IMAGE \
-      --image-project=eip-images \
-      --machine-type $INSTANCE_MACHINE_TYPE \
-      --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
-      --zone $GCLOUD_ZONE \
-      --metadata-from-file startup-script=$STARTUP_SCRIPT_PATH""$STARTUP_SCRIPT >> $LOGFILE 2>&1
+    # gcloud compute instances create $INSTANCE_NAME-${i} \
+    #   --async \
+    #   --boot-disk-size 100GB \
+    #   --boot-disk-type=pd-ssd \
+    #   --can-ip-forward \
+    #   --image=$INSTANCE_IMAGE \
+    #   --image-project=eip-images \
+    #   --machine-type $INSTANCE_MACHINE_TYPE \
+    #   --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
+    #   --zone $GCLOUD_ZONE \
+    #   --metadata-from-file startup-script=$STARTUP_SCRIPT_PATH""$STARTUP_SCRIPT >> $LOGFILE 2>&1
+
+    echo $INSTANCE_NAME-${i}
 
     if [ $? -ne 0 ]; then
       read -p  "An error ocurred while creating your instances, do you want to check execution logs? (y/N)? " choice
