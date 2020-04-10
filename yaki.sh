@@ -1,12 +1,15 @@
 #!/bin/bash
 
+# Preset Values ## User will prompted to confirm / change
 KUBERNETES_VERSION="1.17.4-00"
 INSTANCE_NAME_SUFIX="test"
-INSTANCE_NAME_PREFIX="yaki-"
 INSTANCE_IMAGE="debian-9-drawfork-v20200207"
 INSTANCE_MACHINE_TYPE="n1-standard-2"
 GCLOUD_ZONE="europe-west3-c"
 QTD_NODES="3"
+
+# Default values
+INSTANCE_NAME_PREFIX="yaki-"
 STARTUP_SCRIPT_PATH="startup-script/"
 STARTUP_SCRIPT="install_prereqs.sh"
 CALICO_MANIFEST="https://docs.projectcalico.org/v3.11/manifests/calico.yaml"
@@ -17,12 +20,6 @@ unknown_os ()
 {
   echo "Unfortunately, your operating system distribution and version are not supported by this script."
   echo
-  echo "You can override the OS detection by setting os= and dist= prior to running this script."
-  echo "You can find a list of supported OSes and distributions on our website: https://packagecloud.io/docs#os_distro_version"
-  echo
-  echo "For example, to force Ubuntu Trusty: os=ubuntu dist=trusty ./script.sh"
-  echo
-  echo "Please email support@packagecloud.io and let us know if you run into any issues."
   exit 1
 }
 
@@ -190,6 +187,28 @@ function check_if_delete_cluster ()
   fi  
 }
 
+function prompt_cluster_specs ()
+{
+  read -p "Desired Kubernetes Version [$KUBERNETES_VERSION]: " getKUBERNETES_VERSION
+  KUBERNETES_VERSION=${getKUBERNETES_VERSION:-$KUBERNETES_VERSION}
+
+  read -p "Desired Kubernetes Version [$INSTANCE_NAME_SUFIX]: " getINSTANCE_NAME_SUFIX
+  INSTANCE_NAME_SUFIX=${getINSTANCE_NAME_SUFIX:-$INSTANCE_NAME_SUFIX}
+
+  read -p "Desired Kubernetes Version [$INSTANCE_IMAGE]: " getINSTANCE_IMAGE
+  INSTANCE_IMAGE=${getINSTANCE_IMAGE:-$INSTANCE_IMAGE}
+
+  read -p "Desired Kubernetes Version [$INSTANCE_MACHINE_TYPE]: " getINSTANCE_MACHINE_TYPE
+  INSTANCE_MACHINE_TYPE=${getINSTANCE_MACHINE_TYPE:-$INSTANCE_MACHINE_TYPE}
+
+  read -p "Desired Kubernetes Version [$GCLOUD_ZONE]: " getGCLOUD_ZONE
+  GCLOUD_ZONE=${getGCLOUD_ZONE:-$GCLOUD_ZONE}
+
+  read -p "Desired Kubernetes Version [$QTD_NODES]: " getQTD_NODES
+  QTD_NODES=${getQTD_NODES:-$QTD_NODES}
+
+}
+
 function create_instances ()
 {
   echo "Creating new compute instances"
@@ -320,17 +339,8 @@ function print_end ()
   ssh-add -d ~/.ssh/google_compute_engine
   echo
 }
-
-main () 
+function print_cluster_specs ()
 {
-  detect_os
-  define_instances_name
-  check_cmd_arguments $@
-  prep_startup_script
-  add_ssh_key
-  setup_logs
-  clear
-
   echo "Your cluster will be created using the following variables:"
   echo
   echo "KUBERNETES_VERSION=$KUBERNETES_VERSION
@@ -344,7 +354,25 @@ main ()
   DELETE_OLD_CLUSTER=$DELETE_OLD_CLUSTER
   LOGFILE=$LOGFILE
   "
+}
+main () 
+{
+  detect_os
+  define_instances_name
+  check_cmd_arguments $@
+  prep_startup_script
+  add_ssh_key
+  setup_logs
+  clear
+
+  print_cluster_specs
   echo
+  read -p "You want to continue using pre-defined specs? (y/n)? " choice
+  case "$choice" in 
+    y|Y ) echo;prompt_cluster_specs;print_cluster_specs;;
+    n|N ) echo;echo "Using Defaults...";echo;;
+    * ) echo "invalid";;
+  esac
 
   echo "To watch what is hapening on the background execute this command (yes, I know... it's messy):"
   echo
