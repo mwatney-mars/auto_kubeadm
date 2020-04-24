@@ -1,6 +1,6 @@
 #!/bin/bash
 
-KUBERNETES_VERSION="1.17.4-00"
+KUBERNETES_VERSION="1.18.2-00"
 
 apt-get update
 
