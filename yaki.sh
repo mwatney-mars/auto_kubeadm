@@ -221,7 +221,7 @@ function create_instances ()
       --boot-disk-size 200GB \
       --boot-disk-type=pd-ssd \
       --can-ip-forward \
-      --image=$INSTANCE_IMAGE \
+      --image-family=$INSTANCE_IMAGE \
       --image-project=debian-cloud \
       --machine-type $INSTANCE_MACHINE_TYPE \
       --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
