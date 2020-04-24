@@ -4,11 +4,11 @@
 SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )/"
 
 # Preset Values ## User will prompted to confirm / change
-KUBERNETES_VERSION="1.17.4-00"
+KUBERNETES_VERSION="1.18.2-00"
 INSTANCE_NAME_SUFIX="test"
-INSTANCE_IMAGE="debian-9-drawfork-v20200207"
-INSTANCE_MACHINE_TYPE="n1-standard-2"
-GCLOUD_ZONE="europe-west2-c"
+INSTANCE_IMAGE="debian-9"
+INSTANCE_MACHINE_TYPE="e2-standard-4"
+GCLOUD_ZONE="europe-west2-a"
 QTD_NODES="3"
 
 # Default values
@@ -75,8 +75,7 @@ detect_os ()
   dist="${dist// /}"
 
   echo "Detected operating system as $os/$dist."
-  echo
-    
+  echo   
 }
 
 
@@ -194,19 +193,19 @@ function prompt_cluster_specs ()
   read -p "Desired Kubernetes Version [$KUBERNETES_VERSION]: " getKUBERNETES_VERSION
   KUBERNETES_VERSION=${getKUBERNETES_VERSION:-$KUBERNETES_VERSION}
 
-  read -p "Desired Kubernetes Version [$INSTANCE_NAME_SUFIX]: " getINSTANCE_NAME_SUFIX
+  read -p "Desired instance name suffix [$INSTANCE_NAME_SUFIX]: " getINSTANCE_NAME_SUFIX
   INSTANCE_NAME_SUFIX=${getINSTANCE_NAME_SUFIX:-$INSTANCE_NAME_SUFIX}
 
-  read -p "Desired Kubernetes Version [$INSTANCE_IMAGE]: " getINSTANCE_IMAGE
+  read -p "Desired instance image [$INSTANCE_IMAGE]: " getINSTANCE_IMAGE
   INSTANCE_IMAGE=${getINSTANCE_IMAGE:-$INSTANCE_IMAGE}
 
-  read -p "Desired Kubernetes Version [$INSTANCE_MACHINE_TYPE]: " getINSTANCE_MACHINE_TYPE
+  read -p "Desired machine type [$INSTANCE_MACHINE_TYPE]: " getINSTANCE_MACHINE_TYPE
   INSTANCE_MACHINE_TYPE=${getINSTANCE_MACHINE_TYPE:-$INSTANCE_MACHINE_TYPE}
 
-  read -p "Desired Kubernetes Version [$GCLOUD_ZONE]: " getGCLOUD_ZONE
+  read -p "Desired GCLOUD zone [$GCLOUD_ZONE]: " getGCLOUD_ZONE
   GCLOUD_ZONE=${getGCLOUD_ZONE:-$GCLOUD_ZONE}
 
-  read -p "Desired Kubernetes Version [$QTD_NODES]: " getQTD_NODES
+  read -p "Desired Kubernetes Nodes number [$QTD_NODES]: " getQTD_NODES
   QTD_NODES=${getQTD_NODES:-$QTD_NODES}
 
 }
@@ -219,11 +218,11 @@ function create_instances ()
   while [ $i -le "$QTD_NODES" ]; do
     gcloud compute instances create $INSTANCE_NAME-${i} \
       --async \
-      --boot-disk-size 100GB \
+      --boot-disk-size 200GB \
       --boot-disk-type=pd-ssd \
       --can-ip-forward \
-      --image=$INSTANCE_IMAGE \
-      --image-project=eip-images \
+      --image-family=$INSTANCE_IMAGE \
+      --image-project=debian-cloud \
       --machine-type $INSTANCE_MACHINE_TYPE \
       --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
       --zone $GCLOUD_ZONE \
