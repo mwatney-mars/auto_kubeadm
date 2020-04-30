@@ -1,0 +1,3 @@
+NOTE: The users will be charged for public IPs when VMs are created.
+Instance creation in progress for [yaki-118test-1]: https://www.googleapis.com/compute/v1/projects/chrislac-labs/zones/europe-west2-a/operations/operation-1588246965110-5a480902bc7dc-9b898782-22d3a426
+Use [gcloud compute operations describe URI] command to check the status of the operation(s).

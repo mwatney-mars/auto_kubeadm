@@ -5,11 +5,11 @@ SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )/"
 
 # Preset Values ## User will prompted to confirm / change
 KUBERNETES_VERSION="1.18.2-00"
-INSTANCE_NAME_SUFIX="test"
+INSTANCE_NAME_SUFIX="118"
 INSTANCE_IMAGE="debian-9"
 INSTANCE_MACHINE_TYPE="e2-standard-4"
 GCLOUD_ZONE="europe-west2-a"
-QTD_NODES="3"
+QTD_NODES="2"
 
 # Default values
 INSTANCE_NAME_PREFIX="yaki-"
@@ -18,6 +18,9 @@ STARTUP_SCRIPT="install_prereqs.sh"
 CALICO_MANIFEST="https://docs.projectcalico.org/v3.11/manifests/calico.yaml"
 DELETE_OLD_CLUSTER="yes"
 LOGFILE="$SCRIPT_PATH""log/auto_kubeadm.log"
+
+# Cleaning Log
+> $LOGFILE
 
 unknown_os ()
 {
@@ -218,7 +221,7 @@ function create_instances ()
   while [ $i -le "$QTD_NODES" ]; do
     gcloud compute instances create $INSTANCE_NAME-${i} \
       --async \
-      --boot-disk-size 200GB \
+      --boot-disk-size 100GB \
       --boot-disk-type=pd-ssd \
       --can-ip-forward \
       --image-family=$INSTANCE_IMAGE \
@@ -226,6 +229,7 @@ function create_instances ()
       --machine-type $INSTANCE_MACHINE_TYPE \
       --scopes compute-rw,storage-ro,service-management,service-control,logging-write,monitoring \
       --zone $GCLOUD_ZONE \
+      --tags $INSTANCE_NAME \
       --metadata-from-file startup-script=$STARTUP_SCRIPT_PATH""$STARTUP_SCRIPT >> $LOGFILE 2>&1
 
     if [ $? -ne 0 ]; then
@@ -381,7 +385,7 @@ main ()
   echo
   read -p "You want to change any pre-defined specs? (y/N)? " choice
   case "$choice" in 
-    y|Y ) echo;prompt_cluster_specs;print_cluster_specs;;
+    y|Y ) echo;prompt_cluster_specs;define_instances_name;print_cluster_specs;;
     n|N ) echo;echo "Using Defaults...";echo;;
     * ) echo;echo "Using Defaults...";echo;;
   esac
